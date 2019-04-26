@@ -10,15 +10,15 @@ Written by: Evert Ball and Jake Ginn
 
 To compile:
 
-    ```bash
-    javac *.java
-    ```
+```bash
+javac *.java
+```
 
 To run this program:
 
-    ```bash
-    java Driver < <path_to_input_file>
-    ```
+```bash
+java Driver < <path_to_input_file>
+```
 
 
 ## Known Issues
