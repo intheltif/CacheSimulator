@@ -27,9 +27,9 @@ public class Driver {
         Scanner input = new Scanner(System.in);
 
         CacheSimulator cacheSim = new CacheSimulator(input);
-        cacheSim.getInput();
-        cacheSim.doAddressStuff();
-/*        
+        cacheSim.go();
+
+/*
         // Gets the first 3 lines of input and sets respective variables
         numberSets = input.nextInt();
         setSize = input.nextInt();
