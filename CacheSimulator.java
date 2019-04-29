@@ -33,12 +33,26 @@ public class CacheSimulator {
     /**The cache's line size */
     ArrayList<Integer> lineSize;
 
+    /**set of the offsets */
     ArrayList<Integer> offsets;
+
+    /**set of the indices*/
     ArrayList<Integer> indices;
+
+    /**set of the tags */
     ArrayList<Integer> tags;
+
+    /**the Cache*/
     ArrayList<ArrayList<CacheSets>> cacheLoad = cache.getCache();
+
+    /**Adds how many memoryReferences  */
     ArrayList<Integer> memRefs;
+
+    /**adds whether it was a hit or a miss*/
     ArrayList<String> result;
+
+    /**adds whether it was a read or write instruction */
+    ArrayList<String> access;
 
 
     /**
@@ -56,6 +70,7 @@ public class CacheSimulator {
         tags = new ArrayList<>();
         memRefs = new ArrayList<>();
         result = new ArrayList<>();
+        access = new ArrayList<>();
     } // end constructor with scanner
 
 
@@ -218,14 +233,20 @@ public class CacheSimulator {
 
         for(String ins : cacheIns){
             if(ins.equals("R")){
+                access.add("read");
                 readInstruction(counter);
                 counter++;
             } else if(ins.equals("W")){
-                //writeInstruction();
+                access.add("write");
+                writeInstruction(counter);
+                counter++;
             }
         }
-
+        printBeginMessage();
         printResult();
+        printSummary();
+
+
 
     }
 
@@ -241,7 +262,7 @@ public class CacheSimulator {
 
         if(!foundTag){
             //foundTag = checkValid(set, counter);
-            leastRecentReplace(set,counter);
+            readLeastRecentReplace(set,counter);
 
         }
 
@@ -256,7 +277,7 @@ public class CacheSimulator {
 
         s.setLru(new Date(counter));
         s.setTag(tags.get(counter));
-        result.add("MISS");
+        result.add("miss");
         s.setValidBit(true);
     }
 
@@ -280,7 +301,7 @@ public class CacheSimulator {
             //System.out.println("Tag we have:   " + s.getTag() + "\nTag we are looking for:  " + tags.get(counter));
             if(s.getTag() == tags.get(counter)){
                 if(s.isValidBit()){
-                    result.add("HIT");
+                    result.add("hit");
                     memRefs.add(0);
                     s.setLru(new Date(counter));
 
@@ -294,7 +315,24 @@ public class CacheSimulator {
     }
 
 
-    private void leastRecentReplace(ArrayList<CacheSets> sets, int counter){
+    private void readLeastRecentReplace(ArrayList<CacheSets> sets, int counter){
+        CacheSets lru = findLRU(sets);
+
+        lru.setLru(new Date(counter));
+
+
+        if(lru.getDirtyBit() ==1){
+            memRefs.add(2);
+        }else{
+            memRefs.add(1);
+        }
+
+        tagNotValid(lru, counter);
+        lru.setAddress(cacheAddress.get(counter));
+
+    }
+
+    private void writeLeastRecentReplace(ArrayList<CacheSets> sets, int counter){
         CacheSets lru = findLRU(sets);
 
         lru.setLru(new Date(counter));
@@ -306,6 +344,7 @@ public class CacheSimulator {
         }
 
         tagNotValid(lru, counter);
+        lru.setDirtyBit(1);
         lru.setAddress(cacheAddress.get(counter));
 
     }
@@ -316,12 +355,11 @@ public class CacheSimulator {
 
         for(CacheSets s : sets){
             for(CacheSets cs : sets){
-                System.out.println(s.getLru().getTime());
-                System.out.println(cs.getLru().getTime());
+                //System.out.println(s.getLru().getTime());
+                //System.out.println(cs.getLru().getTime());
                 //System.out.println(s.getLru().getTime() < cs.getLru().getTime());
                 if(s.getLru().getTime()< cs.getLru().getTime()){
                     ret = s;
-                    done = true;
                 }
             }
         }
@@ -333,15 +371,89 @@ public class CacheSimulator {
     }
 
     private void writeInstruction( int counter){
+        boolean sameTag = false;
+        boolean found = false;
+
+        ArrayList<CacheSets> sets = cacheLoad.get(indices.get(counter));
+        for(CacheSets cs : sets){
+            sameTag = false;
+            if(cs.getTag() == tags.get(counter)){
+                sameTag = true;
+                if(cs.isValidBit()){
+                    result.add("hit");
+                    memRefs.add(0);
+                    cs.setLru(new Date(counter));
+                    cs.setAddress(cacheAddress.get(counter));
+                    cs.setDirtyBit(1);
+                    found = true;
+                } else{
+                    sameTag = false;
+                }
+            }
+        }
+
+        if (!sameTag && !found){
+            writeLeastRecentReplace(sets,counter);
+        }
 
 
     }
 
+    private void printBeginMessage(){
+        StringBuilder sb = new StringBuilder("Cache Configuration\n\n\t" + cacheInfo[0] + " " + cacheInfo[1]
+                                            + "-way set associative entries\n\tof line size " + cacheInfo[2]
+                                            + " bytes\n\n\nResults for Each Reference\n");
+        System.out.println(sb);
+    }
+
+    private int getMisses(){
+        int missTotal = 0;
+        for(String s: result){
+            if(s.equals("miss")){
+                missTotal++;
+            }
+        }
+        return missTotal;
+    }
+
+    private int getHits(){
+        int hitTotal = 0;
+        for(String s: result){
+            if(s.equals("hit")){
+                hitTotal++;
+            }
+        }
+        return hitTotal;
+    }
+
 
     private void printResult(){
-        for(String s : result){
-            System.out.println(s);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Access Address    Tag   Index Offset Result Memrefs\n");
+        sb.append("------ -------- ------- ----- ------ ------ -------\n");
+        for(int i = 0; i < cacheAddress.size(); i++){
+            sb.append("  " + access.get(i) + "       " + Integer.toHexString(cacheAddress.get(i)) + "       " + tags.get(i)
+                       + "     " + indices.get(i) + "      " + offsets.get(i) + "   " + result.get(i)
+                    + "       " + memRefs.get(i) + "\n");
         }
+        System.out.println(sb);
+    }
+
+
+    private void printSummary(){
+        StringBuilder sb = new StringBuilder();
+        int miss = getMisses();
+        int hit= getHits();
+        int both = miss + hit;
+        double hitRatio = (double) hit/both;
+        double missRatio = (double) miss/both;
+        sb.append("\n\n\nSimulation Summary Statistics\n-----------------------------\nTotal hits\t: " + hit +
+                    "\nTotal misses\t: " + miss + "\nTotal accessess\t: " + both + "\nHit ratio\t: " +
+                    Math.round(hitRatio * 1000000.0)/1000000.0 + "\nMiss rattio\t: "
+                    + Math.round(missRatio * 1000000.0)/1000000.0);
+
+        System.out.println(sb);
+
     }
 
 

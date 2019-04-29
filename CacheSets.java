@@ -18,7 +18,7 @@ public class CacheSets {
     private int address;
 
     public CacheSets(int size){
-        lru = new Date(0);
+        lru = new Date(-1);
         tag = 0;
         index = 0;
         validBit = false;
