@@ -5,6 +5,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import static java.lang.Integer.parseInt;
+
 //import java.util.ArrayBlockingQueue;
 /**
  * Simulates a cache.
@@ -21,43 +22,44 @@ public class CacheSimulator {
     /** Scanner stuff */
     Scanner input;
 
-    /** Reps cache info */
+    /** An array that holds the information read in from the file */
     int[] cacheInfo = new int[3];
 
-    /**The address for each instruction*/
+    /** The address for each instruction */
     ArrayList<Integer> cacheAddress;
 
-    /**The cache Read or Write Instructions */
+    /** The cache Read or Write Instructions */
     ArrayList<String> cacheIns;
 
-    /**The cache's line size */
+    /** The cache's line size */
     ArrayList<Integer> lineSize;
 
-    /**set of the offsets */
+    /** Set of the offsets */
     ArrayList<Integer> offsets;
 
-    /**set of the indices*/
+    /** Set of the indices*/
     ArrayList<Integer> indices;
 
-    /**set of the tags */
+    /** Set of the tags */
     ArrayList<Integer> tags;
 
-    /**the Cache*/
+    /** The Cache */
     ArrayList<ArrayList<CacheSets>> cacheLoad = cache.getCache();
 
-    /**Adds how many memoryReferences  */
+    /** ArrayList to hold the amount of memory references  */
     ArrayList<Integer> memRefs;
 
-    /**adds whether it was a hit or a miss*/
+    /** ArrayList that holds whether we have a hit or a miss */
     ArrayList<String> result;
 
-    /**adds whether it was a read or write instruction */
+    /** The type of access of the instruction (read or write) */
     ArrayList<String> access;
 
 
     /**
      * Constructor for the CacheSimulator
-     * @param stdin - The Standard input that is coming in from the file that the user inputs
+     * @param stdin - The Standard input that is coming in from the file that 
+     *                the user inputs
      */
     public CacheSimulator(Scanner stdin) {
 
@@ -75,7 +77,7 @@ public class CacheSimulator {
 
 
     /**
-     * the method that begins the CacheSimulator
+     * Begins the CacheSimulator.
      */
     public void go(){
         getInput();
@@ -118,7 +120,10 @@ public class CacheSimulator {
         instructionHandler();
 
     }
-
+    
+    /**
+     * Gets the input from stdin that was passed to the constructor.
+     */
     public void getInput(){
         String line = " ";
         int counter = 0;
@@ -156,7 +161,12 @@ public class CacheSimulator {
     }
 
 
-
+    /**
+     * Finds the number of offset bits needed offset a cache block.
+     * 
+     * @param lineSize The size of the cache line.
+     * @return offsetBits The number of offset bits needed.
+     */
     private int findOffsetBits(int lineSize){
         String binaryOffset = Integer.toBinaryString(lineSize);
         int offsetBits = binaryOffset.toCharArray().length-1;
@@ -272,7 +282,12 @@ public class CacheSimulator {
 
 
     }
-
+    
+    /**
+     * Performs operation if tag is not valid TODO Fix this
+     *
+     * @param s a cache set to perform the operation on
+     * @param counter The counter TODO fix this
     private void tagNotValid(CacheSets s, int counter){
 
         s.setLru(new Date(counter));
@@ -295,7 +310,14 @@ public class CacheSimulator {
 //        return res;
 //
 //    }
-
+    
+    /**
+     * Checks that the tag is valid.
+     *
+     * @param set The cache sets
+     * @param counter The counter
+     * @return True if the tag is valid.
+     */
     private boolean checkTag(ArrayList<CacheSets> set, int counter){
         for(CacheSets s : set){
             //System.out.println("Tag we have:   " + s.getTag() + "\nTag we are looking for:  " + tags.get(counter));
@@ -314,7 +336,12 @@ public class CacheSimulator {
         return false;
     }
 
-
+    /**
+     * Performs the replacement of the LRU for the read instruction.
+     *
+     * @param sets The current cache sets.
+     * @param counter The counter TODO Fix this
+     */
     private void readLeastRecentReplace(ArrayList<CacheSets> sets, int counter){
         CacheSets lru = findLRU(sets);
 
@@ -331,7 +358,13 @@ public class CacheSimulator {
         lru.setAddress(cacheAddress.get(counter));
 
     }
-
+    
+    /**
+     * Performs the replacement of the LRU for the write instruction.
+     *
+     * @param sets The current cache sets.
+     * @param counter The counter? TODO fix this.
+     */
     private void writeLeastRecentReplace(ArrayList<CacheSets> sets, int counter){
         CacheSets lru = findLRU(sets);
 
@@ -348,7 +381,13 @@ public class CacheSimulator {
         lru.setAddress(cacheAddress.get(counter));
 
     }
-
+    
+    /**
+     * Finds the least recently used cache line.
+     *
+     * @param sets An ArrayList of cache sets.
+     * @return ret The least recently used cache set.
+     */
     private CacheSets findLRU(ArrayList<CacheSets> sets){
         CacheSets ret = sets.get(0);
         boolean done = false;
@@ -369,7 +408,12 @@ public class CacheSimulator {
         return ret;
 
     }
-
+    
+    /**
+     * Performs the write instruction when encountered.
+     *
+     * @param counter The counter? TODO Fix this
+     */
     private void writeInstruction( int counter){
         boolean sameTag = false;
         boolean found = false;
@@ -398,7 +442,12 @@ public class CacheSimulator {
 
 
     }
-
+    
+    /**
+     * Prints the cache configuration message.
+     * Information printed includes the number of caches, the associativity
+     * level, and the line size of the cache.
+     */
     private void printBeginMessage(){
         StringBuilder sb = new StringBuilder("Cache Configuration\n\n\t" + cacheInfo[0] + " " + cacheInfo[1]
                                             + "-way set associative entries\n\tof line size " + cacheInfo[2]
@@ -406,6 +455,11 @@ public class CacheSimulator {
         System.out.println(sb);
     }
 
+    /**
+     * Gets the total number of misses that happened during the simulation.
+     *
+     * @return int The total number of misses during the simulation.
+     */
     private int getMisses(){
         int missTotal = 0;
         for(String s: result){
@@ -415,7 +469,12 @@ public class CacheSimulator {
         }
         return missTotal;
     }
-
+    
+    /**
+     * Gets the total number of hits that happened during the simulation.
+     *
+     * @return int The total number of hits during the simulation.
+     */
     private int getHits(){
         int hitTotal = 0;
         for(String s: result){
@@ -426,35 +485,44 @@ public class CacheSimulator {
         return hitTotal;
     }
 
-
+    /**
+     * Prints the results of the cache simulation in a nicely formatted
+     * manner.
+     */
     private void printResult(){
-        StringBuilder sb = new StringBuilder();
-        sb.append("Access Address    Tag   Index Offset Result Memrefs\n");
-        sb.append("------ -------- ------- ----- ------ ------ -------\n");
+        System.out.printf("%6s %8s %6s %8s %6s %6s %5s%n", 
+                          "Access", "Address", "Tag", "Index", "Offset",
+                          "Result", "Memrefs");
+        System.out.printf("%6s %9s %7s %6s %5s %6s %7s%n", 
+                          "------","--------","-------","-----",
+                          "------","------","-------");
         for(int i = 0; i < cacheAddress.size(); i++){
-            sb.append("  " + access.get(i) + "       " + Integer.toHexString(cacheAddress.get(i)) + "       " + tags.get(i)
-                       + "     " + indices.get(i) + "      " + offsets.get(i) + "   " + result.get(i)
-                    + "       " + memRefs.get(i) + "\n");
+            System.out.printf("%6s %9s %7s %6s %6s %6s %7s%n",
+                               access.get(i), 
+                               Integer.toHexString(cacheAddress.get(i)), 
+                               tags.get(i), indices.get(i), offsets.get(i), 
+                               result.get(i), memRefs.get(i));
         }
-        System.out.println(sb);
-    }
+    } // end printResult()
 
-
+    /**
+     * Prints the summmary of the cache simulation in a nicely 
+     * formatted manner.
+     */
     private void printSummary(){
-        StringBuilder sb = new StringBuilder();
+        int hit  = getHits();
         int miss = getMisses();
-        int hit= getHits();
         int both = miss + hit;
-        double hitRatio = (double) hit/both;
+        double hitRatio  = (double) hit/both;
         double missRatio = (double) miss/both;
-        sb.append("\n\n\nSimulation Summary Statistics\n-----------------------------\nTotal hits\t: " + hit +
-                    "\nTotal misses\t: " + miss + "\nTotal accessess\t: " + both + "\nHit ratio\t: " +
-                    Math.round(hitRatio * 1000000.0)/1000000.0 + "\nMiss rattio\t: "
-                    + Math.round(missRatio * 1000000.0)/1000000.0);
 
-        System.out.println(sb);
-
-    }
+        System.out.printf("%n%s%n%s%n", "Simulation Summary Statistics", "-----------------------------");
+        System.out.printf("%-17s%-2s%d%n", "Total hits", ":", hit);
+        System.out.printf("%-17s%-2s%d%n", "Total misses", ":", miss);
+        System.out.printf("%-17s%-2s%d%n", "Total accesses", ":", both);
+        System.out.printf("%-17s%-2s%f%n", "Hit ratio", ":", hitRatio);
+        System.out.printf("%-17s%-2s%f%n", "Miss ratio", ":", missRatio);
+    } // end printSummary()
 
 
 } // end CacheSimulator class
